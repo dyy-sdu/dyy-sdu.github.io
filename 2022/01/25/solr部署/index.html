@@ -23,12 +23,14 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="Tomcat配置 在 linux 的 &#x2F;usr&#x2F;local 目录下新建一个 solr 目录  下载最新的Tomcat到 Linux 系统的 &#x2F;usr&#x2F;local&#x2F;solr下，下载链接：tomcat  12[root@localhost solr]# lsapache-tomcat-8.5.75.tar.gz   然后解压压缩包  1tar -zxvf apache-tomcat-8.5.75.ta">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/2022/01/25/solr%E9%83%A8%E7%BD%B2/solr%E9%83%A8%E7%BD%B2.assets/image-20220126142203010.png">
 <meta property="article:published_time" content="2022-01-25T02:34:08.719Z">
-<meta property="article:modified_time" content="2022-01-26T09:00:50.874Z">
+<meta property="article:modified_time" content="2022-01-26T09:17:38.177Z">
 <meta property="article:author" content="Dyy">
+<meta property="article:tag" content="Tomcat">
+<meta property="article:tag" content="Solr">
+<meta property="article:tag" content="Liunx">
+<meta property="article:tag" content="Sdudoc">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="http://example.com/2022/01/25/solr%E9%83%A8%E7%BD%B2/solr%E9%83%A8%E7%BD%B2.assets/image-20220126142203010.png">
   
   
   <title>Solr8 在linux服务器的部署与所遇到的问题记录 - Hexo</title>
@@ -207,7 +209,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      56 分钟
+      55 分钟
     </span>
   
 
@@ -300,18 +302,15 @@
 
 <p>然后就是关联solr和solrhome</p>
 <p>修改Tomcat中 webapps/solr/WEB-INF下的web.xml</p>
-<p><strong>然后我们惊讶地发现，没有关于重定向 solrhome 的地方，难道官方已经禁止solr8改装了吗。</strong></p>
-<p>那我们只好按部就班的来了。对于solr7的用户，只需要找到一段注释：</p>
-<p><img src="solr%E9%83%A8%E7%BD%B2.assets/image-20220126142203010.png" srcset="/img/loading.gif" lazyload alt="image-20220126142203010"></p>
-<p>将这里改为solrhome的路径，再将</p>
+<p><strong>然后我们惊讶地发现，没有关于重定向 solrhome 的地方</strong></p>
+<p>我们先将下面内容注释掉：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">security-constraint</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">web-resource-collection</span>&gt;</span><br>      <span class="hljs-tag">&lt;<span class="hljs-name">web-resource-name</span>&gt;</span>Disable TRACE<span class="hljs-tag">&lt;/<span class="hljs-name">web-resource-name</span>&gt;</span><br>      <span class="hljs-tag">&lt;<span class="hljs-name">url-pattern</span>&gt;</span>/<span class="hljs-tag">&lt;/<span class="hljs-name">url-pattern</span>&gt;</span><br>      <span class="hljs-tag">&lt;<span class="hljs-name">http-method</span>&gt;</span>TRACE<span class="hljs-tag">&lt;/<span class="hljs-name">http-method</span>&gt;</span><br>    <span class="hljs-tag">&lt;/<span class="hljs-name">web-resource-collection</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">auth-constraint</span>/&gt;</span><br>  <span class="hljs-tag">&lt;/<span class="hljs-name">security-constraint</span>&gt;</span><br>  <span class="hljs-tag">&lt;<span class="hljs-name">security-constraint</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">web-resource-collection</span>&gt;</span><br>      <span class="hljs-tag">&lt;<span class="hljs-name">web-resource-name</span>&gt;</span>Enable everything but TRACE<span class="hljs-tag">&lt;/<span class="hljs-name">web-resource-name</span>&gt;</span><br>      <span class="hljs-tag">&lt;<span class="hljs-name">url-pattern</span>&gt;</span>/<span class="hljs-tag">&lt;/<span class="hljs-name">url-pattern</span>&gt;</span><br>      <span class="hljs-tag">&lt;<span class="hljs-name">http-method-omission</span>&gt;</span>TRACE<span class="hljs-tag">&lt;/<span class="hljs-name">http-method-omission</span>&gt;</span><br>    <span class="hljs-tag">&lt;/<span class="hljs-name">web-resource-collection</span>&gt;</span><br>  <span class="hljs-tag">&lt;/<span class="hljs-name">security-constraint</span>&gt;</span><br><br></code></pre></td></tr></table></figure>
 
-<p>这段注释掉即可。</p>
+<p>即这段注释掉即可。</p>
 <p>此时开启tomcat即可访问solr服务。</p>
-<p>solr8的用户不要慌，我刚刚仔细观察了一下发现，官方只是把那段给删掉了，我们只需要加上即可：</p>
+<p>solr8的用户只需要加上这段即可，solr7直接修改“你的solrhome位置”部分为solrhome路径：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">env-entry</span>&gt;</span><br>  <span class="hljs-tag">&lt;<span class="hljs-name">env-entry-name</span>&gt;</span>solr/home<span class="hljs-tag">&lt;/<span class="hljs-name">env-entry-name</span>&gt;</span><br>  <span class="hljs-tag">&lt;<span class="hljs-name">env-entry-value</span>&gt;</span>“你的solrhome位置”<span class="hljs-tag">&lt;/<span class="hljs-name">env-entry-value</span>&gt;</span><br>  <span class="hljs-tag">&lt;<span class="hljs-name">env-entry-type</span>&gt;</span>java.lang.String<span class="hljs-tag">&lt;/<span class="hljs-name">env-entry-type</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">env-entry</span>&gt;</span><br></code></pre></td></tr></table></figure>
 
-<p>然后也同样注释掉上面那一段即可。</p>
 <p><strong>注意</strong>：Tomcat10启动时会报ClassCastException，那是由于Tomcat把Filter修改了来源包，建议用Tomcat8</p>
 <p>不过为了保险起见，如果想用原生配置的可以查看官方文档：<a target="_blank" rel="noopener" href="https://solr.apache.org/guide/8_11/solr-tutorial.html">官方文档</a></p>
 <h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h2><h3 id="问题1：无法连接到linux服务器的8088端口"><a href="#问题1：无法连接到linux服务器的8088端口" class="headerlink" title="问题1：无法连接到linux服务器的8088端口"></a>问题1：无法连接到linux服务器的8088端口</h3><p>观察到上面的logs可以发现服务器的tomcat实际上已经启动成功了，并且占用的是8088端口，但是当我用浏览器访问该端口时，却发现io timeout。初步判断是防火墙的问题。</p>
@@ -361,6 +360,26 @@
             <div>
               <div class="post-metas mb-3">
                 
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Sdudoc/">Sdudoc</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Tomcat/">Tomcat</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Solr/">Solr</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Liunx/">Liunx</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Sdudoc/">Sdudoc</a>
+                    
+                  </div>
                 
               </div>
               
