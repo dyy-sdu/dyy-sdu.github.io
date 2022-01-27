@@ -1,0 +1,490 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/background/favicon.jpg">
+  <link rel="icon" href="/img/background/favicon.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Dyy">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="描述由于项目更换了远程仓库，从github迁移至gitlab，笔者于是新建了一个ssh key专门用于gitlab的认证，但是使用时却发现ssh key并没有生效。 笔者认为必须要搞清楚ssh认证期间发生了什么。 先尝试执行： 1ssh -vvvT git@gitlab.swsdu.online  完整的DEBUG信息在附录中，这里截取一条重要信息：  debug1: Offering publi">
+<meta property="og:type" content="article">
+<meta property="og:title" content="gitlab 配置ssh key后不生效问题">
+<meta property="og:url" content="http://example.com/2022/01/27/gitlab%20sshkey%20%E5%A4%B1%E6%95%88%E9%97%AE%E9%A2%98/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="描述由于项目更换了远程仓库，从github迁移至gitlab，笔者于是新建了一个ssh key专门用于gitlab的认证，但是使用时却发现ssh key并没有生效。 笔者认为必须要搞清楚ssh认证期间发生了什么。 先尝试执行： 1ssh -vvvT git@gitlab.swsdu.online  完整的DEBUG信息在附录中，这里截取一条重要信息：  debug1: Offering publi">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-01-27T01:44:35.982Z">
+<meta property="article:modified_time" content="2022-01-27T02:10:11.174Z">
+<meta property="article:author" content="Dyy">
+<meta property="article:tag" content="git">
+<meta property="article:tag" content="gitlab">
+<meta property="article:tag" content="ssh">
+<meta property="article:tag" content="ssh key">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  <title>gitlab 配置ssh key后不生效问题 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4/github-markdown.min.css" />
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hint.css@2/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.css" />
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.8.14","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>冰弦的キタサンブラック</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/background/home.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="gitlab 配置ssh key后不生效问题">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-author" aria-hidden="true"></i>
+      Dyy
+    </span>
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2022-01-27 09:44" pubdate>
+        2022年1月27日 上午
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      17k 字
+    </span>
+  
+
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      144 分钟
+    </span>
+  
+
+  
+  
+    
+      <!-- 不蒜子统计文章PV -->
+      <span id="busuanzi_container_page_pv" style="display: none">
+        <i class="iconfont icon-eye" aria-hidden="true"></i>
+        <span id="busuanzi_value_page_pv"></span> 次
+      </span>
+    
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">gitlab 配置ssh key后不生效问题</h1>
+            
+              <p class="note note-info">
+                
+                  本文最后更新于：17 分钟前
+                
+              </p>
+            
+            <div class="markdown-body">
+              <h2 id="描述"><a href="#描述" class="headerlink" title="描述"></a>描述</h2><p>由于项目更换了远程仓库，从github迁移至gitlab，笔者于是新建了一个ssh key专门用于gitlab的认证，但是使用时却发现ssh key并没有生效。</p>
+<p>笔者认为必须要搞清楚ssh认证期间发生了什么。</p>
+<p>先尝试执行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><pre><code class="hljs shell">ssh -vvvT git@gitlab.swsdu.online<br></code></pre></td></tr></table></figure>
+
+<p>完整的DEBUG信息在附录中，这里截取一条重要信息：</p>
+<blockquote>
+<p>debug1: Offering public key: /c/Users/11049/.ssh/id_rsa …</p>
+</blockquote>
+<p>可以看到，认证时并没有用笔者新生成的sdudoc_gitlab密钥，而是之前的id_rsa</p>
+<p>那么解决方法也就很明确了。</p>
+<h2 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h2><p>在 ~/.ssh/ 下建立一个config文件，没有后缀，如果有的话直接进去修改</p>
+<figure class="highlight asciidoc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs asciidoc">Host git.swsdu.online<br><span class="hljs-code">	HostName git.swsdu.online</span><br><span class="hljs-code">	IdentityFile ~/.ssh/sdudoc_gitlab</span><br><span class="hljs-code">	PreferredAuthentications publickey</span><br><span class="hljs-section">	</span><br><span class="hljs-section">----</span><br>Host [ip 或 域名]<br><span class="hljs-code">	HostName [ip 或 域名]</span><br><span class="hljs-code">	IdentityFile ~/.ssh/[key name]</span><br><span class="hljs-code">	PreferredAuthentications publickey</span><br></code></pre></td></tr></table></figure>
+
+<p>再次测试，通过</p>
+<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h2><p>失效时的DEBUG日志</p>
+<blockquote>
+<p>debug1: Reading configuration data /etc/ssh/ssh_config<br>debug2: resolving “git.swsdu.online” port 22<br>debug2: ssh_connect_direct<br>debug1: Connecting to git.swsdu.online [121.250.213.219] port 22.<br>debug1: Connection established.<br>debug1: identity file /c/Users/11049/.ssh/id_rsa type 0<br>debug1: identity file /c/Users/11049/.ssh/id_rsa-cert type -1<br>debug1: identity file /c/Users/11049/.ssh/id_dsa type -1<br>debug1: identity file /c/Users/11049/.ssh/id_dsa-cert type -1<br>debug1: identity file /c/Users/11049/.ssh/id_ecdsa type -1<br>debug1: identity file /c/Users/11049/.ssh/id_ecdsa-cert type -1<br>debug1: identity file /c/Users/11049/.ssh/id_ecdsa_sk type -1<br>debug1: identity file /c/Users/11049/.ssh/id_ecdsa_sk-cert type -1<br>debug1: identity file /c/Users/11049/.ssh/id_ed25519 type -1<br>debug1: identity file /c/Users/11049/.ssh/id_ed25519-cert type -1<br>debug1: identity file /c/Users/11049/.ssh/id_ed25519_sk type -1<br>debug1: identity file /c/Users/11049/.ssh/id_ed25519_sk-cert type -1<br>debug1: identity file /c/Users/11049/.ssh/id_xmss type -1<br>debug1: identity file /c/Users/11049/.ssh/id_xmss-cert type -1<br>debug1: Local version string SSH-2.0-OpenSSH_8.3<br>debug1: Remote protocol version 2.0, remote software version OpenSSH_8.2p1 Ubuntu-4ubuntu0.3<br>debug1: match: OpenSSH_8.2p1 Ubuntu-4ubuntu0.3 pat OpenSSH* compat 0x04000000<br>debug2: fd 3 setting O_NONBLOCK<br>debug1: Authenticating to git.swsdu.online:22 as ‘git’<br>debug3: hostkeys_foreach: reading file “/c/Users/11049/.ssh/known_hosts”<br>debug3: record_hostkey: found key type ECDSA in file /c/Users/11049/.ssh/known_hosts:8<br>debug3: load_hostkeys: loaded 1 keys from git.swsdu.online<br>debug3: order_hostkeyalgs: prefer hostkeyalgs: <a href="mailto:&#101;&#x63;&#100;&#x73;&#97;&#45;&#115;&#x68;&#97;&#50;&#45;&#x6e;&#x69;&#115;&#116;&#x70;&#x32;&#53;&#x36;&#45;&#x63;&#101;&#114;&#x74;&#x2d;&#118;&#48;&#49;&#64;&#x6f;&#112;&#101;&#110;&#x73;&#115;&#x68;&#46;&#99;&#111;&#109;">&#101;&#x63;&#100;&#x73;&#97;&#45;&#115;&#x68;&#97;&#50;&#45;&#x6e;&#x69;&#115;&#116;&#x70;&#x32;&#53;&#x36;&#45;&#x63;&#101;&#114;&#x74;&#x2d;&#118;&#48;&#49;&#64;&#x6f;&#112;&#101;&#110;&#x73;&#115;&#x68;&#46;&#99;&#111;&#109;</a>,<a href="mailto:&#101;&#99;&#x64;&#x73;&#x61;&#x2d;&#x73;&#104;&#97;&#x32;&#45;&#110;&#x69;&#x73;&#116;&#x70;&#x33;&#x38;&#52;&#45;&#x63;&#x65;&#114;&#x74;&#45;&#x76;&#48;&#x31;&#x40;&#111;&#112;&#x65;&#x6e;&#x73;&#x73;&#x68;&#x2e;&#x63;&#x6f;&#x6d;">&#101;&#99;&#x64;&#x73;&#x61;&#x2d;&#x73;&#104;&#97;&#x32;&#45;&#110;&#x69;&#x73;&#116;&#x70;&#x33;&#x38;&#52;&#45;&#x63;&#x65;&#114;&#x74;&#45;&#x76;&#48;&#x31;&#x40;&#111;&#112;&#x65;&#x6e;&#x73;&#x73;&#x68;&#x2e;&#x63;&#x6f;&#x6d;</a>,<a href="mailto:&#101;&#99;&#100;&#x73;&#x61;&#x2d;&#x73;&#x68;&#x61;&#50;&#x2d;&#110;&#x69;&#x73;&#116;&#112;&#x35;&#50;&#x31;&#x2d;&#99;&#x65;&#x72;&#x74;&#x2d;&#x76;&#x30;&#49;&#64;&#x6f;&#112;&#x65;&#x6e;&#115;&#115;&#104;&#46;&#99;&#x6f;&#x6d;">&#101;&#99;&#100;&#x73;&#x61;&#x2d;&#x73;&#x68;&#x61;&#50;&#x2d;&#110;&#x69;&#x73;&#116;&#112;&#x35;&#50;&#x31;&#x2d;&#99;&#x65;&#x72;&#x74;&#x2d;&#x76;&#x30;&#49;&#64;&#x6f;&#112;&#x65;&#x6e;&#115;&#115;&#104;&#46;&#99;&#x6f;&#x6d;</a>,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521<br>debug3: send packet: type 20<br>debug1: SSH2_MSG_KEXINIT sent<br>debug3: receive packet: type 20<br>debug1: SSH2_MSG_KEXINIT received<br>debug2: local client KEXINIT proposal<br>debug2: KEX algorithms: curve25519-sha256,<a href="mailto:&#99;&#117;&#114;&#x76;&#101;&#x32;&#x35;&#53;&#x31;&#x39;&#45;&#x73;&#x68;&#x61;&#50;&#x35;&#54;&#64;&#108;&#105;&#98;&#x73;&#x73;&#104;&#46;&#111;&#114;&#x67;">&#99;&#117;&#114;&#x76;&#101;&#x32;&#x35;&#53;&#x31;&#x39;&#45;&#x73;&#x68;&#x61;&#50;&#x35;&#54;&#64;&#108;&#105;&#98;&#x73;&#x73;&#104;&#46;&#111;&#114;&#x67;</a>,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group-exchange-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,diffie-hellman-group14-sha256,ext-info-c<br>debug2: host key algorithms: <a href="mailto:&#x65;&#x63;&#x64;&#115;&#97;&#x2d;&#115;&#104;&#x61;&#50;&#x2d;&#x6e;&#x69;&#115;&#116;&#x70;&#50;&#53;&#x36;&#x2d;&#99;&#x65;&#x72;&#x74;&#45;&#118;&#x30;&#x31;&#x40;&#111;&#x70;&#x65;&#110;&#x73;&#x73;&#x68;&#x2e;&#x63;&#x6f;&#109;">&#x65;&#x63;&#x64;&#115;&#97;&#x2d;&#115;&#104;&#x61;&#50;&#x2d;&#x6e;&#x69;&#115;&#116;&#x70;&#50;&#53;&#x36;&#x2d;&#99;&#x65;&#x72;&#x74;&#45;&#118;&#x30;&#x31;&#x40;&#111;&#x70;&#x65;&#110;&#x73;&#x73;&#x68;&#x2e;&#x63;&#x6f;&#109;</a>,<a href="mailto:&#101;&#x63;&#x64;&#x73;&#97;&#45;&#x73;&#104;&#97;&#x32;&#x2d;&#x6e;&#x69;&#115;&#116;&#112;&#x33;&#56;&#52;&#x2d;&#x63;&#101;&#114;&#116;&#45;&#x76;&#x30;&#x31;&#64;&#111;&#x70;&#101;&#x6e;&#115;&#115;&#x68;&#46;&#x63;&#x6f;&#x6d;">&#101;&#x63;&#x64;&#x73;&#97;&#45;&#x73;&#104;&#97;&#x32;&#x2d;&#x6e;&#x69;&#115;&#116;&#112;&#x33;&#56;&#52;&#x2d;&#x63;&#101;&#114;&#116;&#45;&#x76;&#x30;&#x31;&#64;&#111;&#x70;&#101;&#x6e;&#115;&#115;&#x68;&#46;&#x63;&#x6f;&#x6d;</a>,<a href="mailto:&#x65;&#99;&#x64;&#115;&#97;&#45;&#115;&#104;&#x61;&#50;&#x2d;&#110;&#x69;&#115;&#116;&#x70;&#x35;&#50;&#x31;&#x2d;&#99;&#101;&#x72;&#116;&#45;&#x76;&#48;&#x31;&#64;&#x6f;&#x70;&#101;&#110;&#115;&#x73;&#x68;&#46;&#99;&#111;&#109;">&#x65;&#99;&#x64;&#115;&#97;&#45;&#115;&#104;&#x61;&#50;&#x2d;&#110;&#x69;&#115;&#116;&#x70;&#x35;&#50;&#x31;&#x2d;&#99;&#101;&#x72;&#116;&#45;&#x76;&#48;&#x31;&#64;&#x6f;&#x70;&#101;&#110;&#115;&#x73;&#x68;&#46;&#99;&#111;&#109;</a>,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,<a href="mailto:&#115;&#x6b;&#45;&#101;&#x63;&#100;&#x73;&#x61;&#x2d;&#115;&#104;&#97;&#x32;&#45;&#x6e;&#x69;&#x73;&#116;&#112;&#x32;&#53;&#54;&#x2d;&#99;&#101;&#x72;&#116;&#45;&#x76;&#x30;&#49;&#64;&#x6f;&#112;&#101;&#110;&#x73;&#115;&#104;&#46;&#x63;&#x6f;&#x6d;">&#115;&#x6b;&#45;&#101;&#x63;&#100;&#x73;&#x61;&#x2d;&#115;&#104;&#97;&#x32;&#45;&#x6e;&#x69;&#x73;&#116;&#112;&#x32;&#53;&#54;&#x2d;&#99;&#101;&#x72;&#116;&#45;&#x76;&#x30;&#49;&#64;&#x6f;&#112;&#101;&#110;&#x73;&#115;&#104;&#46;&#x63;&#x6f;&#x6d;</a>,<a href="mailto:&#x73;&#x73;&#x68;&#x2d;&#x65;&#x64;&#x32;&#x35;&#x35;&#x31;&#57;&#45;&#99;&#101;&#114;&#x74;&#45;&#x76;&#x30;&#49;&#64;&#111;&#112;&#101;&#110;&#x73;&#115;&#x68;&#46;&#x63;&#x6f;&#x6d;">&#x73;&#x73;&#x68;&#x2d;&#x65;&#x64;&#x32;&#x35;&#x35;&#x31;&#57;&#45;&#99;&#101;&#114;&#x74;&#45;&#x76;&#x30;&#49;&#64;&#111;&#112;&#101;&#110;&#x73;&#115;&#x68;&#46;&#x63;&#x6f;&#x6d;</a>,<a href="mailto:&#x73;&#107;&#45;&#115;&#115;&#104;&#45;&#101;&#100;&#x32;&#53;&#53;&#49;&#57;&#45;&#99;&#101;&#114;&#116;&#x2d;&#x76;&#x30;&#x31;&#64;&#x6f;&#112;&#101;&#x6e;&#115;&#115;&#x68;&#x2e;&#99;&#x6f;&#x6d;">&#x73;&#107;&#45;&#115;&#115;&#104;&#45;&#101;&#100;&#x32;&#53;&#53;&#49;&#57;&#45;&#99;&#101;&#114;&#116;&#x2d;&#x76;&#x30;&#x31;&#64;&#x6f;&#112;&#101;&#x6e;&#115;&#115;&#x68;&#x2e;&#99;&#x6f;&#x6d;</a>,<a href="mailto:&#114;&#x73;&#97;&#x2d;&#115;&#x68;&#97;&#50;&#x2d;&#x35;&#x31;&#50;&#45;&#x63;&#101;&#114;&#x74;&#45;&#118;&#x30;&#49;&#x40;&#x6f;&#112;&#101;&#110;&#x73;&#x73;&#x68;&#x2e;&#99;&#x6f;&#x6d;">&#114;&#x73;&#97;&#x2d;&#115;&#x68;&#97;&#50;&#x2d;&#x35;&#x31;&#50;&#45;&#x63;&#101;&#114;&#x74;&#45;&#118;&#x30;&#49;&#x40;&#x6f;&#112;&#101;&#110;&#x73;&#x73;&#x68;&#x2e;&#99;&#x6f;&#x6d;</a>,<a href="mailto:&#x72;&#115;&#x61;&#x2d;&#x73;&#104;&#x61;&#50;&#x2d;&#50;&#53;&#54;&#x2d;&#99;&#101;&#114;&#116;&#x2d;&#x76;&#48;&#49;&#64;&#x6f;&#112;&#x65;&#110;&#x73;&#x73;&#x68;&#46;&#x63;&#111;&#109;">&#x72;&#115;&#x61;&#x2d;&#x73;&#104;&#x61;&#50;&#x2d;&#50;&#53;&#54;&#x2d;&#99;&#101;&#114;&#116;&#x2d;&#x76;&#48;&#49;&#64;&#x6f;&#112;&#x65;&#110;&#x73;&#x73;&#x68;&#46;&#x63;&#111;&#109;</a>,<a href="mailto:&#115;&#x73;&#104;&#x2d;&#x72;&#x73;&#97;&#x2d;&#99;&#x65;&#x72;&#116;&#45;&#118;&#x30;&#x31;&#64;&#x6f;&#112;&#x65;&#110;&#x73;&#115;&#x68;&#46;&#99;&#111;&#x6d;">&#115;&#x73;&#104;&#x2d;&#x72;&#x73;&#97;&#x2d;&#99;&#x65;&#x72;&#116;&#45;&#118;&#x30;&#x31;&#64;&#x6f;&#112;&#x65;&#110;&#x73;&#115;&#x68;&#46;&#99;&#111;&#x6d;</a>,<a href="mailto:&#115;&#x6b;&#x2d;&#101;&#x63;&#x64;&#x73;&#97;&#x2d;&#115;&#x68;&#x61;&#x32;&#x2d;&#110;&#x69;&#115;&#116;&#x70;&#x32;&#x35;&#x36;&#64;&#x6f;&#x70;&#101;&#110;&#115;&#115;&#104;&#46;&#x63;&#111;&#x6d;">&#115;&#x6b;&#x2d;&#101;&#x63;&#x64;&#x73;&#97;&#x2d;&#115;&#x68;&#x61;&#x32;&#x2d;&#110;&#x69;&#115;&#116;&#x70;&#x32;&#x35;&#x36;&#64;&#x6f;&#x70;&#101;&#110;&#115;&#115;&#104;&#46;&#x63;&#111;&#x6d;</a>,ssh-ed25519,<a href="mailto:&#115;&#107;&#45;&#115;&#x73;&#x68;&#45;&#x65;&#100;&#x32;&#53;&#53;&#49;&#x39;&#64;&#111;&#112;&#101;&#110;&#115;&#x73;&#104;&#46;&#x63;&#111;&#x6d;">&#115;&#107;&#45;&#115;&#x73;&#x68;&#45;&#x65;&#100;&#x32;&#53;&#53;&#49;&#x39;&#64;&#111;&#112;&#101;&#110;&#115;&#x73;&#104;&#46;&#x63;&#111;&#x6d;</a>,rsa-sha2-512,rsa-sha2-256,ssh-rsa<br>debug2: ciphers ctos: <a href="mailto:&#99;&#104;&#97;&#x63;&#x68;&#97;&#x32;&#x30;&#x2d;&#x70;&#x6f;&#108;&#121;&#49;&#51;&#48;&#x35;&#64;&#x6f;&#x70;&#101;&#110;&#x73;&#x73;&#104;&#x2e;&#99;&#x6f;&#x6d;">&#99;&#104;&#97;&#x63;&#x68;&#97;&#x32;&#x30;&#x2d;&#x70;&#x6f;&#108;&#121;&#49;&#51;&#48;&#x35;&#64;&#x6f;&#x70;&#101;&#110;&#x73;&#x73;&#104;&#x2e;&#99;&#x6f;&#x6d;</a>,aes128-ctr,aes192-ctr,aes256-ctr,<a href="mailto:&#x61;&#101;&#x73;&#49;&#x32;&#x38;&#x2d;&#103;&#99;&#109;&#x40;&#x6f;&#x70;&#101;&#x6e;&#x73;&#115;&#x68;&#46;&#x63;&#111;&#109;">&#x61;&#101;&#x73;&#49;&#x32;&#x38;&#x2d;&#103;&#99;&#109;&#x40;&#x6f;&#x70;&#101;&#x6e;&#x73;&#115;&#x68;&#46;&#x63;&#111;&#109;</a>,<a href="mailto:&#97;&#101;&#115;&#50;&#x35;&#54;&#45;&#103;&#99;&#109;&#64;&#111;&#112;&#101;&#x6e;&#x73;&#115;&#104;&#x2e;&#99;&#x6f;&#109;">&#97;&#101;&#115;&#50;&#x35;&#54;&#45;&#103;&#99;&#109;&#64;&#111;&#112;&#101;&#x6e;&#x73;&#115;&#104;&#x2e;&#99;&#x6f;&#109;</a>,aes128-cbc,3des-cbc,aes256-cbc,aes192-cbc<br>debug2: ciphers stoc: <a href="mailto:&#99;&#x68;&#x61;&#99;&#104;&#97;&#50;&#x30;&#x2d;&#112;&#x6f;&#108;&#x79;&#49;&#51;&#48;&#x35;&#x40;&#111;&#x70;&#101;&#x6e;&#x73;&#115;&#x68;&#x2e;&#99;&#x6f;&#109;">&#99;&#x68;&#x61;&#99;&#104;&#97;&#50;&#x30;&#x2d;&#112;&#x6f;&#108;&#x79;&#49;&#51;&#48;&#x35;&#x40;&#111;&#x70;&#101;&#x6e;&#x73;&#115;&#x68;&#x2e;&#99;&#x6f;&#109;</a>,aes128-ctr,aes192-ctr,aes256-ctr,<a href="mailto:&#x61;&#101;&#x73;&#x31;&#x32;&#x38;&#45;&#x67;&#99;&#x6d;&#64;&#111;&#x70;&#x65;&#110;&#115;&#115;&#104;&#46;&#x63;&#111;&#x6d;">&#x61;&#101;&#x73;&#x31;&#x32;&#x38;&#45;&#x67;&#99;&#x6d;&#64;&#111;&#x70;&#x65;&#110;&#115;&#115;&#104;&#46;&#x63;&#111;&#x6d;</a>,<a href="mailto:&#97;&#101;&#115;&#50;&#53;&#x36;&#45;&#103;&#x63;&#109;&#64;&#111;&#112;&#x65;&#110;&#x73;&#x73;&#x68;&#x2e;&#x63;&#x6f;&#109;">&#97;&#101;&#115;&#50;&#53;&#x36;&#45;&#103;&#x63;&#109;&#64;&#111;&#112;&#x65;&#110;&#x73;&#x73;&#x68;&#x2e;&#x63;&#x6f;&#109;</a>,aes128-cbc,3des-cbc,aes256-cbc,aes192-cbc<br>debug2: MACs ctos: <a href="mailto:&#117;&#x6d;&#97;&#x63;&#45;&#x36;&#52;&#45;&#x65;&#116;&#109;&#64;&#x6f;&#x70;&#101;&#x6e;&#x73;&#x73;&#104;&#46;&#99;&#x6f;&#x6d;">&#117;&#x6d;&#97;&#x63;&#45;&#x36;&#52;&#45;&#x65;&#116;&#109;&#64;&#x6f;&#x70;&#101;&#x6e;&#x73;&#x73;&#104;&#46;&#99;&#x6f;&#x6d;</a>,<a href="mailto:&#117;&#109;&#97;&#99;&#x2d;&#x31;&#x32;&#56;&#45;&#x65;&#x74;&#x6d;&#64;&#111;&#x70;&#x65;&#110;&#x73;&#115;&#x68;&#46;&#99;&#111;&#x6d;">&#117;&#109;&#97;&#99;&#x2d;&#x31;&#x32;&#56;&#45;&#x65;&#x74;&#x6d;&#64;&#111;&#x70;&#x65;&#110;&#x73;&#115;&#x68;&#46;&#99;&#111;&#x6d;</a>,<a href="mailto:&#x68;&#109;&#97;&#99;&#45;&#x73;&#104;&#97;&#x32;&#45;&#50;&#53;&#x36;&#45;&#x65;&#116;&#109;&#64;&#x6f;&#x70;&#101;&#110;&#115;&#x73;&#x68;&#46;&#99;&#x6f;&#109;">&#x68;&#109;&#97;&#99;&#45;&#x73;&#104;&#97;&#x32;&#45;&#50;&#53;&#x36;&#45;&#x65;&#116;&#109;&#64;&#x6f;&#x70;&#101;&#110;&#115;&#x73;&#x68;&#46;&#99;&#x6f;&#109;</a>,<a href="mailto:&#x68;&#109;&#97;&#99;&#x2d;&#x73;&#x68;&#x61;&#50;&#45;&#53;&#49;&#50;&#45;&#101;&#x74;&#x6d;&#x40;&#111;&#x70;&#101;&#x6e;&#x73;&#115;&#104;&#46;&#x63;&#111;&#x6d;">&#x68;&#109;&#97;&#99;&#x2d;&#x73;&#x68;&#x61;&#50;&#45;&#53;&#49;&#50;&#45;&#101;&#x74;&#x6d;&#x40;&#111;&#x70;&#101;&#x6e;&#x73;&#115;&#104;&#46;&#x63;&#111;&#x6d;</a>,<a href="mailto:&#104;&#x6d;&#97;&#99;&#45;&#115;&#104;&#x61;&#x31;&#45;&#x65;&#116;&#109;&#64;&#x6f;&#x70;&#101;&#110;&#115;&#x73;&#104;&#46;&#x63;&#x6f;&#109;">&#104;&#x6d;&#97;&#99;&#45;&#115;&#104;&#x61;&#x31;&#45;&#x65;&#116;&#109;&#64;&#x6f;&#x70;&#101;&#110;&#115;&#x73;&#104;&#46;&#x63;&#x6f;&#109;</a>,<a href="mailto:&#117;&#x6d;&#x61;&#99;&#x2d;&#x36;&#x34;&#x40;&#x6f;&#112;&#x65;&#110;&#x73;&#115;&#x68;&#x2e;&#x63;&#111;&#109;">&#117;&#x6d;&#x61;&#99;&#x2d;&#x36;&#x34;&#x40;&#x6f;&#112;&#x65;&#110;&#x73;&#115;&#x68;&#x2e;&#x63;&#111;&#109;</a>,<a href="mailto:&#117;&#109;&#97;&#x63;&#x2d;&#49;&#x32;&#56;&#x40;&#x6f;&#x70;&#x65;&#110;&#x73;&#x73;&#x68;&#x2e;&#99;&#x6f;&#109;">&#117;&#109;&#97;&#x63;&#x2d;&#49;&#x32;&#56;&#x40;&#x6f;&#x70;&#x65;&#110;&#x73;&#x73;&#x68;&#x2e;&#99;&#x6f;&#109;</a>,hmac-sha2-256,hmac-sha2-512,hmac-sha1<br>debug2: MACs stoc: <a href="mailto:&#x75;&#109;&#97;&#x63;&#x2d;&#x36;&#52;&#45;&#101;&#x74;&#x6d;&#x40;&#111;&#112;&#101;&#x6e;&#x73;&#x73;&#x68;&#x2e;&#99;&#111;&#x6d;">&#x75;&#109;&#97;&#x63;&#x2d;&#x36;&#52;&#45;&#101;&#x74;&#x6d;&#x40;&#111;&#112;&#101;&#x6e;&#x73;&#x73;&#x68;&#x2e;&#99;&#111;&#x6d;</a>,<a href="mailto:&#117;&#109;&#97;&#99;&#x2d;&#49;&#x32;&#x38;&#45;&#101;&#116;&#x6d;&#x40;&#x6f;&#112;&#x65;&#x6e;&#x73;&#115;&#x68;&#46;&#x63;&#x6f;&#109;">&#117;&#109;&#97;&#99;&#x2d;&#49;&#x32;&#x38;&#45;&#101;&#116;&#x6d;&#x40;&#x6f;&#112;&#x65;&#x6e;&#x73;&#115;&#x68;&#46;&#x63;&#x6f;&#109;</a>,<a href="mailto:&#104;&#109;&#97;&#x63;&#x2d;&#x73;&#x68;&#97;&#50;&#x2d;&#50;&#53;&#x36;&#x2d;&#101;&#116;&#x6d;&#x40;&#111;&#x70;&#101;&#110;&#x73;&#x73;&#x68;&#46;&#99;&#111;&#109;">&#104;&#109;&#97;&#x63;&#x2d;&#x73;&#x68;&#97;&#50;&#x2d;&#50;&#53;&#x36;&#x2d;&#101;&#116;&#x6d;&#x40;&#111;&#x70;&#101;&#110;&#x73;&#x73;&#x68;&#46;&#99;&#111;&#109;</a>,<a href="mailto:&#104;&#x6d;&#97;&#99;&#x2d;&#x73;&#x68;&#97;&#50;&#x2d;&#x35;&#x31;&#50;&#x2d;&#101;&#116;&#x6d;&#64;&#x6f;&#112;&#101;&#x6e;&#115;&#x73;&#x68;&#x2e;&#99;&#x6f;&#x6d;">&#104;&#x6d;&#97;&#99;&#x2d;&#x73;&#x68;&#97;&#50;&#x2d;&#x35;&#x31;&#50;&#x2d;&#101;&#116;&#x6d;&#64;&#x6f;&#112;&#101;&#x6e;&#115;&#x73;&#x68;&#x2e;&#99;&#x6f;&#x6d;</a>,<a href="mailto:&#x68;&#109;&#x61;&#x63;&#x2d;&#x73;&#x68;&#97;&#49;&#x2d;&#x65;&#x74;&#109;&#64;&#111;&#112;&#101;&#x6e;&#115;&#x73;&#104;&#46;&#x63;&#x6f;&#109;">&#x68;&#109;&#x61;&#x63;&#x2d;&#x73;&#x68;&#97;&#49;&#x2d;&#x65;&#x74;&#109;&#64;&#111;&#112;&#101;&#x6e;&#115;&#x73;&#104;&#46;&#x63;&#x6f;&#109;</a>,<a href="mailto:&#x75;&#x6d;&#97;&#99;&#x2d;&#54;&#52;&#64;&#x6f;&#x70;&#101;&#110;&#x73;&#x73;&#104;&#46;&#99;&#x6f;&#109;">&#x75;&#x6d;&#97;&#99;&#x2d;&#54;&#52;&#64;&#x6f;&#x70;&#101;&#110;&#x73;&#x73;&#104;&#46;&#99;&#x6f;&#109;</a>,<a href="mailto:&#x75;&#109;&#x61;&#99;&#45;&#x31;&#50;&#x38;&#64;&#111;&#x70;&#101;&#x6e;&#115;&#115;&#x68;&#46;&#99;&#x6f;&#x6d;">&#x75;&#109;&#x61;&#99;&#45;&#x31;&#50;&#x38;&#64;&#111;&#x70;&#101;&#x6e;&#115;&#115;&#x68;&#46;&#99;&#x6f;&#x6d;</a>,hmac-sha2-256,hmac-sha2-512,hmac-sha1<br>debug2: compression ctos: none,<a href="mailto:&#122;&#108;&#x69;&#98;&#64;&#111;&#112;&#x65;&#x6e;&#x73;&#x73;&#104;&#46;&#x63;&#111;&#109;">&#122;&#108;&#x69;&#98;&#64;&#111;&#112;&#x65;&#x6e;&#x73;&#x73;&#104;&#46;&#x63;&#111;&#109;</a>,zlib<br>debug2: compression stoc: none,<a href="mailto:&#x7a;&#x6c;&#x69;&#x62;&#x40;&#x6f;&#112;&#101;&#x6e;&#115;&#115;&#x68;&#x2e;&#99;&#111;&#x6d;">&#x7a;&#x6c;&#x69;&#x62;&#x40;&#x6f;&#112;&#101;&#x6e;&#115;&#115;&#x68;&#x2e;&#99;&#111;&#x6d;</a>,zlib<br>debug2: languages ctos:<br>debug2: languages stoc:<br>debug2: first_kex_follows 0<br>debug2: reserved 0<br>debug2: peer server KEXINIT proposal<br>debug2: KEX algorithms: curve25519-sha256,<a href="mailto:&#99;&#x75;&#x72;&#x76;&#x65;&#x32;&#53;&#53;&#x31;&#x39;&#45;&#115;&#104;&#97;&#x32;&#53;&#x36;&#x40;&#108;&#105;&#x62;&#115;&#x73;&#x68;&#46;&#111;&#114;&#103;">&#99;&#x75;&#x72;&#x76;&#x65;&#x32;&#53;&#53;&#x31;&#x39;&#45;&#115;&#104;&#97;&#x32;&#53;&#x36;&#x40;&#108;&#105;&#x62;&#115;&#x73;&#x68;&#46;&#111;&#114;&#103;</a>,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group-exchange-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,diffie-hellman-group14-sha256<br>debug2: host key algorithms: rsa-sha2-512,rsa-sha2-256,ssh-rsa,ecdsa-sha2-nistp256,ssh-ed25519<br>debug2: ciphers ctos: <a href="mailto:&#x63;&#x68;&#97;&#99;&#104;&#x61;&#x32;&#x30;&#45;&#112;&#x6f;&#108;&#x79;&#49;&#51;&#x30;&#53;&#x40;&#x6f;&#112;&#x65;&#x6e;&#x73;&#x73;&#104;&#x2e;&#x63;&#111;&#x6d;">&#x63;&#x68;&#97;&#99;&#104;&#x61;&#x32;&#x30;&#45;&#112;&#x6f;&#108;&#x79;&#49;&#51;&#x30;&#53;&#x40;&#x6f;&#112;&#x65;&#x6e;&#x73;&#x73;&#104;&#x2e;&#x63;&#111;&#x6d;</a>,aes128-ctr,aes192-ctr,aes256-ctr,<a href="mailto:&#97;&#101;&#115;&#x31;&#50;&#x38;&#45;&#103;&#x63;&#x6d;&#x40;&#111;&#112;&#101;&#110;&#115;&#115;&#x68;&#x2e;&#x63;&#111;&#109;">&#97;&#101;&#115;&#x31;&#50;&#x38;&#45;&#103;&#x63;&#x6d;&#x40;&#111;&#112;&#101;&#110;&#115;&#115;&#x68;&#x2e;&#x63;&#111;&#109;</a>,<a href="mailto:&#x61;&#x65;&#x73;&#x32;&#53;&#54;&#45;&#x67;&#x63;&#x6d;&#64;&#x6f;&#112;&#101;&#x6e;&#x73;&#115;&#x68;&#x2e;&#99;&#111;&#109;">&#x61;&#x65;&#x73;&#x32;&#53;&#54;&#45;&#x67;&#x63;&#x6d;&#64;&#x6f;&#112;&#101;&#x6e;&#x73;&#115;&#x68;&#x2e;&#99;&#111;&#109;</a><br>debug2: ciphers stoc: <a href="mailto:&#99;&#x68;&#x61;&#x63;&#104;&#97;&#50;&#48;&#45;&#x70;&#111;&#x6c;&#121;&#x31;&#x33;&#48;&#53;&#64;&#x6f;&#112;&#x65;&#x6e;&#115;&#115;&#104;&#x2e;&#99;&#x6f;&#109;">&#99;&#x68;&#x61;&#x63;&#104;&#97;&#50;&#48;&#45;&#x70;&#111;&#x6c;&#121;&#x31;&#x33;&#48;&#53;&#64;&#x6f;&#112;&#x65;&#x6e;&#115;&#115;&#104;&#x2e;&#99;&#x6f;&#109;</a>,aes128-ctr,aes192-ctr,aes256-ctr,<a href="mailto:&#97;&#101;&#115;&#49;&#x32;&#56;&#x2d;&#103;&#x63;&#109;&#64;&#111;&#112;&#x65;&#110;&#115;&#x73;&#x68;&#46;&#99;&#x6f;&#109;">&#97;&#101;&#115;&#49;&#x32;&#56;&#x2d;&#103;&#x63;&#109;&#64;&#111;&#112;&#x65;&#110;&#115;&#x73;&#x68;&#46;&#99;&#x6f;&#109;</a>,<a href="mailto:&#97;&#x65;&#115;&#x32;&#x35;&#x36;&#45;&#x67;&#x63;&#x6d;&#64;&#x6f;&#x70;&#x65;&#x6e;&#115;&#115;&#104;&#46;&#99;&#111;&#x6d;">&#97;&#x65;&#115;&#x32;&#x35;&#x36;&#45;&#x67;&#x63;&#x6d;&#64;&#x6f;&#x70;&#x65;&#x6e;&#115;&#115;&#104;&#46;&#99;&#111;&#x6d;</a><br>debug2: MACs ctos: <a href="mailto:&#117;&#109;&#x61;&#x63;&#45;&#x36;&#52;&#x2d;&#x65;&#116;&#x6d;&#64;&#x6f;&#x70;&#101;&#x6e;&#115;&#x73;&#x68;&#x2e;&#x63;&#111;&#109;">&#117;&#109;&#x61;&#x63;&#45;&#x36;&#52;&#x2d;&#x65;&#116;&#x6d;&#64;&#x6f;&#x70;&#101;&#x6e;&#115;&#x73;&#x68;&#x2e;&#x63;&#111;&#109;</a>,<a href="mailto:&#117;&#109;&#x61;&#x63;&#45;&#x31;&#x32;&#x38;&#45;&#x65;&#x74;&#x6d;&#x40;&#x6f;&#112;&#101;&#x6e;&#x73;&#115;&#104;&#x2e;&#x63;&#x6f;&#x6d;">&#117;&#109;&#x61;&#x63;&#45;&#x31;&#x32;&#x38;&#45;&#x65;&#x74;&#x6d;&#x40;&#x6f;&#112;&#101;&#x6e;&#x73;&#115;&#104;&#x2e;&#x63;&#x6f;&#x6d;</a>,<a href="mailto:&#x68;&#109;&#97;&#x63;&#45;&#x73;&#104;&#97;&#x32;&#45;&#50;&#x35;&#54;&#x2d;&#x65;&#x74;&#x6d;&#64;&#111;&#x70;&#101;&#x6e;&#115;&#115;&#104;&#46;&#x63;&#x6f;&#x6d;">&#x68;&#109;&#97;&#x63;&#45;&#x73;&#104;&#97;&#x32;&#45;&#50;&#x35;&#54;&#x2d;&#x65;&#x74;&#x6d;&#64;&#111;&#x70;&#101;&#x6e;&#115;&#115;&#104;&#46;&#x63;&#x6f;&#x6d;</a>,<a href="mailto:&#x68;&#x6d;&#97;&#99;&#x2d;&#x73;&#x68;&#x61;&#50;&#x2d;&#53;&#x31;&#50;&#45;&#x65;&#116;&#x6d;&#64;&#111;&#x70;&#101;&#110;&#115;&#115;&#104;&#46;&#99;&#x6f;&#x6d;">&#x68;&#x6d;&#97;&#99;&#x2d;&#x73;&#x68;&#x61;&#50;&#x2d;&#53;&#x31;&#50;&#45;&#x65;&#116;&#x6d;&#64;&#111;&#x70;&#101;&#110;&#115;&#115;&#104;&#46;&#99;&#x6f;&#x6d;</a>,<a href="mailto:&#104;&#109;&#x61;&#x63;&#45;&#x73;&#x68;&#x61;&#49;&#x2d;&#101;&#x74;&#x6d;&#64;&#x6f;&#x70;&#x65;&#x6e;&#x73;&#115;&#104;&#x2e;&#x63;&#111;&#109;">&#104;&#109;&#x61;&#x63;&#45;&#x73;&#x68;&#x61;&#49;&#x2d;&#101;&#x74;&#x6d;&#64;&#x6f;&#x70;&#x65;&#x6e;&#x73;&#115;&#104;&#x2e;&#x63;&#111;&#109;</a>,<a href="mailto:&#x75;&#109;&#x61;&#99;&#x2d;&#54;&#x34;&#x40;&#x6f;&#112;&#x65;&#x6e;&#x73;&#115;&#x68;&#46;&#x63;&#x6f;&#x6d;">&#x75;&#109;&#x61;&#99;&#x2d;&#54;&#x34;&#x40;&#x6f;&#112;&#x65;&#x6e;&#x73;&#115;&#x68;&#46;&#x63;&#x6f;&#x6d;</a>,<a href="mailto:&#117;&#109;&#x61;&#x63;&#x2d;&#x31;&#x32;&#x38;&#64;&#x6f;&#112;&#x65;&#110;&#x73;&#x73;&#x68;&#x2e;&#x63;&#111;&#x6d;">&#117;&#109;&#x61;&#x63;&#x2d;&#x31;&#x32;&#x38;&#64;&#x6f;&#112;&#x65;&#110;&#x73;&#x73;&#x68;&#x2e;&#x63;&#111;&#x6d;</a>,hmac-sha2-256,hmac-sha2-512,hmac-sha1<br>debug2: MACs stoc: <a href="mailto:&#x75;&#109;&#x61;&#99;&#x2d;&#x36;&#x34;&#45;&#x65;&#x74;&#109;&#64;&#111;&#x70;&#101;&#110;&#x73;&#115;&#x68;&#46;&#x63;&#x6f;&#109;">&#x75;&#109;&#x61;&#99;&#x2d;&#x36;&#x34;&#45;&#x65;&#x74;&#109;&#64;&#111;&#x70;&#101;&#110;&#x73;&#115;&#x68;&#46;&#x63;&#x6f;&#109;</a>,<a href="mailto:&#117;&#109;&#97;&#99;&#x2d;&#x31;&#50;&#x38;&#x2d;&#101;&#116;&#109;&#x40;&#111;&#112;&#x65;&#x6e;&#115;&#x73;&#104;&#x2e;&#x63;&#x6f;&#109;">&#117;&#109;&#97;&#99;&#x2d;&#x31;&#50;&#x38;&#x2d;&#101;&#116;&#109;&#x40;&#111;&#112;&#x65;&#x6e;&#115;&#x73;&#104;&#x2e;&#x63;&#x6f;&#109;</a>,<a href="mailto:&#104;&#x6d;&#x61;&#99;&#45;&#115;&#104;&#97;&#50;&#x2d;&#50;&#x35;&#x36;&#x2d;&#x65;&#116;&#109;&#x40;&#111;&#x70;&#101;&#x6e;&#115;&#115;&#104;&#x2e;&#99;&#111;&#109;">&#104;&#x6d;&#x61;&#99;&#45;&#115;&#104;&#97;&#50;&#x2d;&#50;&#x35;&#x36;&#x2d;&#x65;&#116;&#109;&#x40;&#111;&#x70;&#101;&#x6e;&#115;&#115;&#104;&#x2e;&#99;&#111;&#109;</a>,<a href="mailto:&#104;&#x6d;&#97;&#99;&#x2d;&#115;&#x68;&#x61;&#x32;&#x2d;&#x35;&#x31;&#50;&#45;&#101;&#116;&#x6d;&#x40;&#111;&#x70;&#101;&#110;&#x73;&#x73;&#104;&#46;&#x63;&#111;&#x6d;">&#104;&#x6d;&#97;&#99;&#x2d;&#115;&#x68;&#x61;&#x32;&#x2d;&#x35;&#x31;&#50;&#45;&#101;&#116;&#x6d;&#x40;&#111;&#x70;&#101;&#110;&#x73;&#x73;&#104;&#46;&#x63;&#111;&#x6d;</a>,<a href="mailto:&#104;&#x6d;&#97;&#x63;&#45;&#115;&#x68;&#97;&#49;&#45;&#101;&#116;&#x6d;&#x40;&#111;&#112;&#101;&#x6e;&#115;&#x73;&#x68;&#x2e;&#99;&#111;&#109;">&#104;&#x6d;&#97;&#x63;&#45;&#115;&#x68;&#97;&#49;&#45;&#101;&#116;&#x6d;&#x40;&#111;&#112;&#101;&#x6e;&#115;&#x73;&#x68;&#x2e;&#99;&#111;&#109;</a>,<a href="mailto:&#x75;&#x6d;&#x61;&#99;&#45;&#x36;&#52;&#64;&#x6f;&#x70;&#x65;&#110;&#115;&#115;&#104;&#46;&#99;&#x6f;&#109;">&#x75;&#x6d;&#x61;&#99;&#45;&#x36;&#52;&#64;&#x6f;&#x70;&#x65;&#110;&#115;&#115;&#104;&#46;&#99;&#x6f;&#109;</a>,<a href="mailto:&#117;&#x6d;&#x61;&#99;&#45;&#x31;&#x32;&#x38;&#64;&#111;&#112;&#x65;&#110;&#x73;&#x73;&#x68;&#x2e;&#99;&#x6f;&#109;">&#117;&#x6d;&#x61;&#99;&#45;&#x31;&#x32;&#x38;&#64;&#111;&#112;&#x65;&#110;&#x73;&#x73;&#x68;&#x2e;&#99;&#x6f;&#109;</a>,hmac-sha2-256,hmac-sha2-512,hmac-sha1<br>debug2: compression ctos: none,<a href="mailto:&#x7a;&#x6c;&#x69;&#98;&#64;&#x6f;&#112;&#x65;&#110;&#115;&#x73;&#104;&#x2e;&#99;&#x6f;&#109;">&#x7a;&#x6c;&#x69;&#98;&#64;&#x6f;&#112;&#x65;&#110;&#115;&#x73;&#104;&#x2e;&#99;&#x6f;&#109;</a><br>debug2: compression stoc: none,<a href="mailto:&#x7a;&#108;&#105;&#x62;&#x40;&#111;&#112;&#x65;&#x6e;&#x73;&#x73;&#104;&#x2e;&#x63;&#111;&#109;">&#x7a;&#108;&#105;&#x62;&#x40;&#111;&#112;&#x65;&#x6e;&#x73;&#x73;&#104;&#x2e;&#x63;&#111;&#109;</a><br>debug2: languages ctos:<br>debug2: languages stoc:<br>debug2: first_kex_follows 0<br>debug2: reserved 0<br>debug1: kex: algorithm: curve25519-sha256<br>debug1: kex: host key algorithm: ecdsa-sha2-nistp256<br>debug1: kex: server-&gt;client cipher: <a href="mailto:&#99;&#x68;&#97;&#x63;&#104;&#x61;&#x32;&#x30;&#x2d;&#112;&#x6f;&#x6c;&#121;&#x31;&#x33;&#48;&#x35;&#x40;&#111;&#x70;&#101;&#x6e;&#x73;&#x73;&#x68;&#x2e;&#99;&#111;&#109;">&#99;&#x68;&#97;&#x63;&#104;&#x61;&#x32;&#x30;&#x2d;&#112;&#x6f;&#x6c;&#121;&#x31;&#x33;&#48;&#x35;&#x40;&#111;&#x70;&#101;&#x6e;&#x73;&#x73;&#x68;&#x2e;&#99;&#111;&#109;</a> MAC: <implicit> compression: none<br>debug1: kex: client-&gt;server cipher: <a href="mailto:&#99;&#104;&#x61;&#x63;&#104;&#97;&#50;&#x30;&#x2d;&#x70;&#111;&#x6c;&#x79;&#49;&#x33;&#x30;&#53;&#64;&#111;&#112;&#x65;&#x6e;&#115;&#x73;&#x68;&#x2e;&#99;&#111;&#x6d;">&#99;&#104;&#x61;&#x63;&#104;&#97;&#50;&#x30;&#x2d;&#x70;&#111;&#x6c;&#x79;&#49;&#x33;&#x30;&#53;&#64;&#111;&#112;&#x65;&#x6e;&#115;&#x73;&#x68;&#x2e;&#99;&#111;&#x6d;</a> MAC: <implicit> compression: none<br>debug3: send packet: type 30<br>debug1: expecting SSH2_MSG_KEX_ECDH_REPLY<br>debug3: receive packet: type 31<br>debug1: Server host key: ecdsa-sha2-nistp256 SHA256:9ZgxICswo+e0UCYxwRpzi8MQFOXECeUn9tP23hxVztA<br>debug3: hostkeys_foreach: reading file “/c/Users/11049/.ssh/known_hosts”<br>debug3: record_hostkey: found key type ECDSA in file /c/Users/11049/.ssh/known_hosts:8<br>debug3: load_hostkeys: loaded 1 keys from git.swsdu.online<br>debug3: hostkeys_foreach: reading file “/c/Users/11049/.ssh/known_hosts”<br>debug3: record_hostkey: found key type ECDSA in file /c/Users/11049/.ssh/known_hosts:8<br>debug3: load_hostkeys: loaded 1 keys from 121.250.213.219<br>debug1: Host ‘git.swsdu.online’ is known and matches the ECDSA host key.<br>debug1: Found key in /c/Users/11049/.ssh/known_hosts:8<br>debug3: send packet: type 21<br>debug2: set_newkeys: mode 1<br>debug1: rekey out after 134217728 blocks<br>debug1: SSH2_MSG_NEWKEYS sent<br>debug1: expecting SSH2_MSG_NEWKEYS<br>debug3: receive packet: type 21<br>debug1: SSH2_MSG_NEWKEYS received<br>debug2: set_newkeys: mode 0<br>debug1: rekey in after 134217728 blocks<br>debug1: Will attempt key: /c/Users/11049/.ssh/id_rsa RSA SHA256:SXiMdbzwJse2yjl/7B2Sy+004be3e8TLrRLxVjqY3pA<br>debug1: Will attempt key: /c/Users/11049/.ssh/id_dsa<br>debug1: Will attempt key: /c/Users/11049/.ssh/id_ecdsa<br>debug1: Will attempt key: /c/Users/11049/.ssh/id_ecdsa_sk<br>debug1: Will attempt key: /c/Users/11049/.ssh/id_ed25519<br>debug1: Will attempt key: /c/Users/11049/.ssh/id_ed25519_sk<br>debug1: Will attempt key: /c/Users/11049/.ssh/id_xmss<br>debug2: pubkey_prepare: done<br>debug3: send packet: type 5<br>debug3: receive packet: type 7<br>debug1: SSH2_MSG_EXT_INFO received<br>debug1: kex_input_ext_info: server-sig-algs=&lt;ssh-ed25519,<a href="mailto:&#x73;&#x6b;&#45;&#115;&#115;&#104;&#x2d;&#101;&#100;&#x32;&#x35;&#x35;&#x31;&#57;&#64;&#111;&#112;&#101;&#110;&#115;&#x73;&#104;&#x2e;&#99;&#x6f;&#x6d;">&#x73;&#x6b;&#45;&#115;&#115;&#104;&#x2d;&#101;&#100;&#x32;&#x35;&#x35;&#x31;&#57;&#64;&#111;&#112;&#101;&#110;&#115;&#x73;&#104;&#x2e;&#99;&#x6f;&#x6d;</a>,ssh-rsa,rsa-sha2-256,rsa-sha2-512,ssh-dss,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,<a href="mailto:&#115;&#107;&#x2d;&#x65;&#99;&#100;&#115;&#97;&#45;&#x73;&#104;&#97;&#x32;&#45;&#x6e;&#x69;&#115;&#x74;&#x70;&#50;&#x35;&#54;&#x40;&#x6f;&#112;&#x65;&#110;&#115;&#x73;&#104;&#x2e;&#x63;&#x6f;&#x6d;">&#115;&#107;&#x2d;&#x65;&#99;&#100;&#115;&#97;&#45;&#x73;&#104;&#97;&#x32;&#45;&#x6e;&#x69;&#115;&#x74;&#x70;&#50;&#x35;&#54;&#x40;&#x6f;&#112;&#x65;&#110;&#115;&#x73;&#104;&#x2e;&#x63;&#x6f;&#x6d;</a>&gt;<br>debug3: receive packet: type 6<br>debug2: service_accept: ssh-userauth<br>debug1: SSH2_MSG_SERVICE_ACCEPT received<br>debug3: send packet: type 50<br>debug3: receive packet: type 51<br>debug1: Authentications that can continue: publickey,password<br>debug3: start over, passed a different list publickey,password<br>debug3: preferred publickey,keyboard-interactive,password<br>debug3: authmethod_lookup publickey<br>debug3: remaining preferred: keyboard-interactive,password<br>debug3: authmethod_is_enabled publickey<br>debug1: Next authentication method: publickey<br>debug1: Offering public key: /c/Users/11049/.ssh/id_rsa RSA SHA256:SXiMdbzwJse2yjl/7B2Sy+004be3e8TLrRLxVjqY3pA<br>debug3: send packet: type 50<br>debug2: we sent a publickey packet, wait for reply<br>debug3: receive packet: type 51<br>debug1: Authentications that can continue: publickey,password<br>debug1: Trying private key: /c/Users/11049/.ssh/id_dsa<br>debug3: no such identity: /c/Users/11049/.ssh/id_dsa: No such file or directory<br>debug1: Trying private key: /c/Users/11049/.ssh/id_ecdsa<br>debug3: no such identity: /c/Users/11049/.ssh/id_ecdsa: No such file or directory<br>debug1: Trying private key: /c/Users/11049/.ssh/id_ecdsa_sk<br>debug3: no such identity: /c/Users/11049/.ssh/id_ecdsa_sk: No such file or directory<br>debug1: Trying private key: /c/Users/11049/.ssh/id_ed25519<br>debug3: no such identity: /c/Users/11049/.ssh/id_ed25519: No such file or directory<br>debug1: Trying private key: /c/Users/11049/.ssh/id_ed25519_sk<br>debug3: no such identity: /c/Users/11049/.ssh/id_ed25519_sk: No such file or directory<br>debug1: Trying private key: /c/Users/11049/.ssh/id_xmss<br>debug3: no such identity: /c/Users/11049/.ssh/id_xmss: No such file or directory<br>debug2: we did not send a packet, disable method<br>debug3: authmethod_lookup password<br>debug3: remaining preferred: ,password<br>debug3: authmethod_is_enabled password<br>debug1: Next authentication method: password</p>
+</blockquote>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Sdudoc/">Sdudoc</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/git/">git</a>
+                    
+                      <a class="hover-with-bg" href="/tags/gitlab/">gitlab</a>
+                    
+                      <a class="hover-with-bg" href="/tags/ssh/">ssh</a>
+                    
+                      <a class="hover-with-bg" href="/tags/ssh-key/">ssh key</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/01/25/solr%E9%83%A8%E7%BD%B2/">
+                        <span class="hidden-mobile">Solr8 在linux服务器的部署与所遇到的问题记录</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  
+    <script  src="https://cdn.jsdelivr.net/npm/tocbot@4/dist/tocbot.min.js" ></script>
+  
+  
+    <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.js" ></script>
+  
+  
+    <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4/anchor.min.js" ></script>
+  
+  
+    <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js" ></script>
+  
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+        typing(title);
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>
